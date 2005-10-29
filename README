@@ -1,0 +1,19 @@
+script.aculo.us Slider
+======================
+
+This plugin provides helpers for the script.aculo.us slider control.
+
+Example:
+  <%= slider_stylesheet %>
+  <%= slider_field :object, :method %>
+  
+slider_field uses a hidden field internally that gets set automatically
+when using the Slider.
+
+slider_stylesheet builds a stylesheet for the slider (examine the output and
+copy/paste to your own CSS files).
+
+NOTE: This is very preliminary, better version coming soon.
+For discussion of this plugin use the rails-spinoffs mailing list!
+  
+Copyright (c) 2005 Thomas Fuchs, released under the MIT license
