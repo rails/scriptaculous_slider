@@ -1,1 +1,1 @@
-ActionView::Base::load_helpers("#{directory}/helpers/")
+ActionView::Base::load_helpers("#{directory}/lib/helpers/")

@@ -39,6 +39,13 @@ module ActionView
           options[k] = array_or_string_for_javascript(options[k]) if options[k]
         end
         
+        if options[:slider_value]
+          options[:sliderValue] = array_or_numeric_for_javascript(options[:slider_value])
+          options.delete :slider_value
+        end
+        
+        options[:range] = "$R(#{options[:range].min},#{options[:range].max})" if options[:range]
+        
         handle = options[:handles] || "$('#{element_id}').firstChild"
         options.delete :handles
                 
@@ -49,7 +56,7 @@ module ActionView
       def slider_field(object, method, options={})
         options.merge!({ 
           :change => "$('#{object}_#{method}').value = value",
-          :value  => instance_variable_get("@#{object}").send(method)
+          :slider_value  => instance_variable_get("@#{object}").send(method)
         })
         hidden_field(object, method) <<        
         content_tag('div',content_tag('div', ''), 
@@ -89,6 +96,15 @@ module ActionView
             "['#{option.join('\',\'')}']"
           elsif !option.nil?
             "'#{option}'"
+          end
+          js_option
+        end
+        
+        def array_or_numeric_for_javascript(option)
+          js_option = if option.kind_of?(Array)
+            "[#{option.join('\',\'')}]"
+          elsif !option.nil?
+            "#{option}"
           end
           js_option
         end
