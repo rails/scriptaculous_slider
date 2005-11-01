@@ -5,8 +5,11 @@ This plugin provides helpers for the script.aculo.us slider control.
 
 Installation:
 
-You need to run rake scriptaculous_slider_install to install the
-necessary slider.js file into your public/javascripts folder.
+You need to run:
+
+rake scriptaculous_slider_install 
+
+to install the necessary slider.js file in your public/javascripts folder.
 
 Usage:
 
