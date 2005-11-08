@@ -1,6 +1,25 @@
-// Copyright (c) 2005 Marty Haught
+// Copyright (c) 2005 Marty Haught, Thomas Fuchs 
+//
+// See http://script.aculo.us for more info
 // 
-// See scriptaculous.js for full license.
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 if(!Control) var Control = {};
 Control.Slider = Class.create();
@@ -32,6 +51,9 @@ Control.Slider.prototype = {
     this.value     = 0; // assure backwards compat
     this.values    = this.handles.map( function() { return 0 });
     this.spans     = this.options.spans ? this.options.spans.map(function(s){ return $(s) }) : false;
+    this.options.startSpan = $(this.options.startSpan || null);
+    this.options.endSpan   = $(this.options.endSpan || null);
+
     this.restricted = this.options.restricted || false;
 
     this.maximum   = this.options.maximum || this.range.end;
@@ -60,8 +82,9 @@ Control.Slider.prototype = {
     this.eventMouseUp   = this.endDrag.bindAsEventListener(this);
     this.eventMouseMove = this.update.bindAsEventListener(this);
 
-    // Initialize handles
+    // Initialize handles in reverse (make sure first handle is active)
     this.handles.each( function(h,i) {
+      i = slider.handles.length-1-i;
       slider.setValue(parseFloat(
         (slider.options.sliderValue instanceof Array ? 
           slider.options.sliderValue[i] : slider.options.sliderValue) || 
@@ -115,6 +138,7 @@ Control.Slider.prototype = {
     if(!this.active) {
       this.activeHandle    = this.handles[handleIdx];
       this.activeHandleIdx = handleIdx;
+      this.updateStyles();
     }
     handleIdx = handleIdx || this.activeHandleIdx || 0;
     if(this.initialized && this.restricted) {
@@ -131,7 +155,7 @@ Control.Slider.prototype = {
       this.translateToPx(sliderValue);
     
     this.drawSpans();
-    this.updateFinished();
+    if(!this.event) this.updateFinished();
   },
   setValueBy: function(delta, handleIdx) {
     this.setValue(this.values[handleIdx || this.activeHandleIdx || 0] + delta, 
@@ -161,16 +185,26 @@ Control.Slider.prototype = {
   drawSpans: function() {
     var slider = this;
     if(this.spans)
-      $R(0, this.spans.length-1).each(function(r) { slider.setSpan(r, slider.getRange(r)) });
+      $R(0, this.spans.length-1).each(function(r) { slider.setSpan(slider.spans[r], slider.getRange(r)) });
+    if(this.options.startSpan)
+      this.setSpan(this.options.startSpan,
+        $R(0, this.values.length>1 ? this.getRange(0).min() : this.value ));
+    if(this.options.endSpan)
+      this.setSpan(this.options.endSpan, 
+        $R(this.values.length>1 ? this.getRange(this.spans.length-1).max() : this.value, this.maximum));
   },
   setSpan: function(span, range) {
     if(this.isVertical()) {
-      this.spans[span].style.top = this.translateToPx(range.start);
-      this.spans[span].style.height = this.translateToPx(range.end - range.start);
+      span.style.top = this.translateToPx(range.start);
+      span.style.height = this.translateToPx(range.end - range.start);
     } else {
-      this.spans[span].style.left = this.translateToPx(range.start);
-      this.spans[span].style.width = this.translateToPx(range.end - range.start);
+      span.style.left = this.translateToPx(range.start);
+      span.style.width = this.translateToPx(range.end - range.start);
     }
+  },
+  updateStyles: function() {
+    this.handles.each( function(h){ Element.removeClassName(h, 'selected') });
+    Element.addClassName(this.activeHandle, 'selected');
   },
   startDrag: function(event) {
     if(Event.isLeftClick(event)) {
@@ -180,7 +214,8 @@ Control.Slider.prototype = {
         var handle = Event.element(event);
         var pointer  = [Event.pointerX(event), Event.pointerY(event)];
         if(handle==this.track) {
-          var offsets  = Position.cumulativeOffset(this.track);          
+          var offsets  = Position.cumulativeOffset(this.track); 
+          this.event = event;         
           this.setValue(this.translateToValue( 
             this.isVertical() ? pointer[1]-offsets[1] : pointer[0]-offsets[0]
           ));
@@ -194,6 +229,7 @@ Control.Slider.prototype = {
         
           this.activeHandle    = handle;
           this.activeHandleIdx = this.handles.indexOf(this.activeHandle);
+          this.updateStyles();
         
           var offsets  = Position.cumulativeOffset(this.activeHandle);
           this.offsetX = (pointer[0] - offsets[0]);
@@ -220,6 +256,7 @@ Control.Slider.prototype = {
     var offsets = Position.cumulativeOffset(this.track);
     pointer[0] -= this.offsetX + offsets[0];
     pointer[1] -= this.offsetY + offsets[1];
+    this.event = event;
     this.setValue(this.translateToValue( this.isVertical() ? pointer[1] : pointer[0] ));
     if(this.initialized && this.options.onSlide) this.options.onSlide(this.values.length>1 ? this.values : this.value, this);
   },
@@ -237,6 +274,8 @@ Control.Slider.prototype = {
     this.updateFinished();
   },
   updateFinished: function() {
-    if(this.initialized && this.options.onChange) this.options.onChange(this.values.length>1 ? this.values : this.value, this);
+    if(this.initialized && this.options.onChange) 
+      this.options.onChange(this.values.length>1 ? this.values : this.value, this);
+    this.event = null;
   }
 }

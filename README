@@ -23,7 +23,10 @@ when using the Slider.
 slider_stylesheet builds a stylesheet for the slider (examine the output and
 copy/paste to your own CSS files).
 
-NOTE: This is very preliminary, better version coming soon.
+To see the full functionality and possibilities of the slider control,
+have a look a the functional and unit tests provided in the script.aculo.us
+SVN trunk, see http://wiki.script.aculo.us/scriptaculous/show/Versions.
+
 For discussion of this plugin use the rails-spinoffs mailing list!
   
-Copyright (c) 2005 Thomas Fuchs, released under the MIT license
+Copyright (c) 2005 Marty Haught, Thomas Fuchs, released under the MIT license
